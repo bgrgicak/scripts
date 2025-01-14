@@ -86,12 +86,21 @@ case $unit in
         ;;
 esac
 
+# Calculate the number of full kilobytes and remaining bytes
+full_kilobytes=$((bytes / 1024))
+remaining_bytes=$((bytes % 1024))
+
 # Create a temporary file with random data
 temp_file=$(mktemp)
-dd if=/dev/urandom of=$temp_file bs=1M count=$((bytes/1024/1024)) status=progress 2>/dev/null
+
+# Write full kilobytes
+dd if=/dev/urandom of=$temp_file bs=1K count=$full_kilobytes status=progress 2>/dev/null
+
+# Write remaining bytes
+dd if=/dev/urandom of=$temp_file bs=1 count=$remaining_bytes oflag=append conv=notrunc status=progress 2>/dev/null
 
 # Create ZIP file
-zip -q "$output_path" $temp_file
+zip -q -f "$output_path" $temp_file
 
 # Clean up
 rm $temp_file
